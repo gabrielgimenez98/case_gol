@@ -1,5 +1,9 @@
 from flask import Flask, request, jsonify
 import redis
+
+from app.services.csv import filtra_linha_csv
+from app.services.sql import inserir_dados_sql, filtrar_dados_sql
+
 app = Flask(__name__)
 r = redis.Redis(host='localhost', port=6379, db=0)
 
@@ -46,6 +50,38 @@ def login():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/inserir_dados', methods=['POST'])
+def inserir_dados():
+    try:
+        dados = filtra_linha_csv()
+        inserir_dados_sql(nome_banco="gol", nome_tabela="voos",dados=dados)
+        
+        return jsonify({'message': 'Dados Inseridos com sucesso'}), 201
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/filtrar_dados', methods=['POST'])
+def filtrar_dados():
+    try:
+        data = request.get_json()
+        mes = data.get('mes')
+        ano = data.get('ano')
+        
+        campo = "ano"if ano else "mes"
+
+        valor = ano if ano else mes
+
+        if not valor:
+            return jsonify({'message': 'Envie mes ou ano para fazer filtro'}), 400
+        resultado = filtrar_dados_sql(nome_banco="gol", nome_tabela="voos", campo=campo, valor=valor)
+        
+        return jsonify({'resultado': resultado}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 
 if __name__ == "__main__":
 	app.run()
