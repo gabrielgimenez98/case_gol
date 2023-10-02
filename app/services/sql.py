@@ -8,7 +8,7 @@ def insert_into_sql(data):
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
-        "password":'biel0104',
+        "password":'',
         "database":'gol'
         }
         con = mysql.connector.connect(**db_config)
@@ -38,7 +38,7 @@ def filter_by_date(table_name, year, month):
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
-        "password":'biel0104',
+        "password":'',
         "database":'gol'
         }
         con = mysql.connector.connect(**db_config)
@@ -75,7 +75,7 @@ def filter_by_market(table_name, market):
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
-        "password":'biel0104',
+        "password":'',
         "database":'gol'
         }
         con = mysql.connector.connect(**db_config)
@@ -113,7 +113,7 @@ def filter_for_chart(table_name, market, initial_year,end_year, initial_month, e
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
-        "password":'biel0104',
+        "password":'',
         "database":'gol'
         }
         con = mysql.connector.connect(**db_config)
