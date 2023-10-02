@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import redis
+from services.chart import criar_grafico
 
-from app.services.csv import filtra_linha_csv
-from app.services.sql import inserir_dados_sql, filtrar_dados_sql
+from services.csv import filtra_linha_csv
+from services.sql import inserir_dados_sql, filtrar_dados_sql_data, filtrar_dados_sql_mercado, filtrar_dados_sql_grafico
 
 app = Flask(__name__)
 r = redis.Redis(host='localhost', port=6379, db=0)
@@ -62,8 +63,8 @@ def inserir_dados():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-@app.route('/filtrar_dados', methods=['POST'])
-def filtrar_dados():
+@app.route('/filtrar_dados_data', methods=['POST'])
+def filtrar_dados_data():
     try:
         data = request.get_json()
         mes = data.get('mes')
@@ -72,9 +73,42 @@ def filtrar_dados():
         if not (mes or ano):
             return jsonify({'message': 'Envie mes ou ano para fazer filtro'}), 400
         
-        resultado = filtrar_dados_sql(nome_banco="gol", nome_tabela="voos", ano=ano, mes=mes)
+        resultado = filtrar_dados_sql_data(nome_banco="gol", nome_tabela="voos", ano=ano, mes=mes)
         
         return jsonify({'resultado': resultado}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/filtrar_dados_mercado', methods=['POST'])
+def filtrar_dados_mercado():
+    try:
+        data = request.get_json()
+        mercado = data.get('mercado')
+        
+        if not mercado:
+            return jsonify({'message': 'Envie mercado para fazer filtro'}), 400
+        
+        resultado = filtrar_dados_sql_mercado(nome_banco="gol", nome_tabela="voos", mercado=mercado)
+        
+        return jsonify({'resultado': resultado}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/grafico', methods=['POST'])
+def grafico():
+    try:
+        data = request.get_json()
+        mercado = data.get('mercado')
+        mes_inicio = data.get('mes_inicio')
+        ano_inicio = data.get('ano_inicio')
+        mes_fim= data.get('mes_fim')
+        ano_fim= data.get('ano_fim')
+        x,y = filtrar_dados_sql_grafico(nome_banco="gol", nome_tabela="voos",ano_inicio=ano_inicio, mes_inicio=mes_inicio,ano_fim=ano_fim, mes_fim=mes_fim, mercado=mercado)
+        grafico = criar_grafico(x, y)
+        return Response(grafico, content_type='image/png')
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
