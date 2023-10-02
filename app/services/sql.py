@@ -3,7 +3,7 @@ import mysql.connector
 
 
 
-def inserir_dados_sql(dados, nome_banco, nome_tabela):
+def insert_into_sql(data):
     try:
         db_config = {
         "host":'127.0.0.1',
@@ -11,127 +11,123 @@ def inserir_dados_sql(dados, nome_banco, nome_tabela):
         "password":'',
         "database":'gol'
         }
-        # Conectar ao banco de dados
-        conexao = mysql.connector.connect(**db_config)
-        cursor = conexao.cursor()
+        con = mysql.connector.connect(**db_config)
+        cursor = con.cursor()
 
-        for item in dados:
+        for item in data:
             try:
-                consulta = "INSERT INTO voos (ano, mes, mercado, rpk) VALUES (%s, %s, %s, %s)"
-                valores = (item['ano'], item['mes'], item['mercado'], item['rpk'])
-                cursor.execute(consulta, valores)
+                sql_query = "INSERT INTO voos (ano, mes, mercado, rpk) VALUES (%s, %s, %s, %s)"
+                values = (item['ano'], item['mes'], item['mercado'], item['rpk'])
+                cursor.execute(sql_query, values)
             except:
                 continue
 
-            cursor.execute(consulta, tuple(item.values()))
+            cursor.execute(sql_query, tuple(item.values()))
 
-        conexao.commit()
+        con.commit()
 
-        conexao.close()
+        con.close()
 
 
     except sqlite3.Error as erro:
         print(f"Erro ao inserir dados no SQLite: {erro}")
         raise erro
     
-def filtrar_dados_sql_data(nome_banco, nome_tabela, ano, mes):
+def filter_by_date(table_name, year, month):
     try:
-        # Conectar ao banco de dados
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
         "password":'',
         "database":'gol'
         }
-        conexao = mysql.connector.connect(**db_config)
-        cursor = conexao.cursor()
+        con = mysql.connector.connect(**db_config)
+        cursor = con.cursor()
 
-        consulta_sql = f"""
+        sql_query = f"""
                         SELECT *
-                        FROM {nome_tabela}
+                        FROM {table_name}
                         WHERE
                             (ano = %s OR %s IS NULL)
                             AND (mes = %s OR %s IS NULL);
                     """
-        cursor.execute(consulta_sql,(ano, ano, mes, mes))
+        cursor.execute(sql_query,(year, year, month, month))
 
-        resultados = []
+        results = []
         for row in cursor.fetchall():
             row_dict = {}
             for idx, col in enumerate(cursor.description):
                 col_name = col[0]
                 col_value = row[idx]
                 row_dict[col_name] = col_value
-            resultados.append(row_dict)
+            results.append(row_dict)
 
-        conexao.close()
+        con.close()
         
-        return resultados
+        return results
     
     except sqlite3.Error as erro:
         print(f"Erro ao filtrar dados no SQLite: {erro}")
         raise erro
     
-def filtrar_dados_sql_mercado(nome_banco, nome_tabela, mercado):
+def filter_by_market(table_name, market):
     try:
-        # Conectar ao banco de dados
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
         "password":'',
         "database":'gol'
         }
-        conexao = mysql.connector.connect(**db_config)
-        cursor = conexao.cursor()
+        con = mysql.connector.connect(**db_config)
+        cursor = con.cursor()
 
-        consulta_sql = f"""
+        sql_query = f"""
                         SELECT *
-                        FROM {nome_tabela}
+                        FROM {table_name}
                         WHERE
                             mercado = %s
                             ;
                     """
-        cursor.execute(consulta_sql,(mercado,))
+        cursor.execute(sql_query,(market,))
 
-        resultados = []
+        results = []
         for row in cursor.fetchall():
             row_dict = {}
             for idx, col in enumerate(cursor.description):
                 col_name = col[0]
                 col_value = row[idx]
                 row_dict[col_name] = col_value
-            resultados.append(row_dict)
+            results.append(row_dict)
 
-        conexao.close()
+        con.close()
         
-        return resultados
+        return results
     
     except sqlite3.Error as erro:
         print(f"Erro ao filtrar dados no SQLite: {erro}")
         raise erro
     
 
-def filtrar_dados_sql_grafico(nome_banco, nome_tabela, mercado, ano_inicio,ano_fim, mes_inicio, mes_fim):
+def filter_for_chart(table_name, market, initial_year,end_year, initial_month, end_month):
     try:
-        # Conectar ao banco de dados
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
         "password":'',
         "database":'gol'
         }
-        conexao = mysql.connector.connect(**db_config)
-        cursor = conexao.cursor()
+        con = mysql.connector.connect(**db_config)
+        cursor = con.cursor()
 
-        consulta_sql = f"""
+        query_sql = f"""
                         SELECT CONCAT(ano, '-', mes) AS ano_mes, rpk
-                        FROM {nome_tabela}
+                        FROM {table_name}
                         WHERE
                             mercado = %s
                             AND CONCAT(ano, '-', mes) BETWEEN %s AND %s
                             ;
                     """
-        cursor.execute(consulta_sql,(mercado,f"{ano_inicio}-{mes_inicio}", f"{ano_fim}-{mes_fim}"))
+        cursor.execute(query_sql,(market,f"{initial_year}-{initial_month}", f"{end_year}-{end_month}"))
 
         resultados = cursor.fetchall()
 
@@ -140,7 +136,7 @@ def filtrar_dados_sql_grafico(nome_banco, nome_tabela, mercado, ano_inicio,ano_f
         y = [resultado[1] for resultado in resultados]
 
 
-        conexao.close()
+        con.close()
         
         return x,y
     

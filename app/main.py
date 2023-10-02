@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify, Response
 import redis
-from services.chart import criar_grafico
+from services.chart import create_chart
 
-from services.csv import filtra_linha_csv
-from services.sql import inserir_dados_sql, filtrar_dados_sql_data, filtrar_dados_sql_mercado, filtrar_dados_sql_grafico
+from services.csv import extract_csv_data
+from services.sql import insert_into_sql, filter_by_date, filter_by_market, filter_for_chart
 
 app = Flask(__name__)
 r = redis.Redis(host='localhost', port=6379, db=0)
@@ -55,8 +55,8 @@ def login():
 @app.route('/inserir_dados', methods=['POST'])
 def inserir_dados():
     try:
-        dados = filtra_linha_csv()
-        inserir_dados_sql(nome_banco="gol", nome_tabela="voos",dados=dados)
+        dados = extract_csv_data()
+        insert_into_sql(nome_banco="gol", nome_tabela="voos",dados=dados)
         
         return jsonify({'message': 'Dados Inseridos com sucesso'}), 201
     
@@ -73,7 +73,7 @@ def filtrar_dados_data():
         if not (mes or ano):
             return jsonify({'message': 'Envie mes ou ano para fazer filtro'}), 400
         
-        resultado = filtrar_dados_sql_data(nome_banco="gol", nome_tabela="voos", ano=ano, mes=mes)
+        resultado = filter_by_date(nome_banco="gol", nome_tabela="voos", ano=ano, mes=mes)
         
         return jsonify({'resultado': resultado}), 200
     
@@ -89,7 +89,7 @@ def filtrar_dados_mercado():
         if not mercado:
             return jsonify({'message': 'Envie mercado para fazer filtro'}), 400
         
-        resultado = filtrar_dados_sql_mercado(nome_banco="gol", nome_tabela="voos", mercado=mercado)
+        resultado = filter_by_market(nome_banco="gol", nome_tabela="voos", mercado=mercado)
         
         return jsonify({'resultado': resultado}), 200
     
@@ -106,8 +106,8 @@ def grafico():
         ano_inicio = data.get('ano_inicio')
         mes_fim= data.get('mes_fim')
         ano_fim= data.get('ano_fim')
-        x,y = filtrar_dados_sql_grafico(nome_banco="gol", nome_tabela="voos",ano_inicio=ano_inicio, mes_inicio=mes_inicio,ano_fim=ano_fim, mes_fim=mes_fim, mercado=mercado)
-        grafico = criar_grafico(x, y)
+        x,y = filter_for_chart(nome_banco="gol", nome_tabela="voos",ano_inicio=ano_inicio, mes_inicio=mes_inicio,ano_fim=ano_fim, mes_fim=mes_fim, mercado=mercado)
+        grafico = create_chart(x, y)
         return Response(grafico, content_type='image/png')
     
     except Exception as e:
