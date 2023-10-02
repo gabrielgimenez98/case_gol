@@ -69,13 +69,10 @@ def filtrar_dados():
         mes = data.get('mes')
         ano = data.get('ano')
         
-        campo = "ano"if ano else "mes"
-
-        valor = ano if ano else mes
-
-        if not valor:
+        if not (mes or ano):
             return jsonify({'message': 'Envie mes ou ano para fazer filtro'}), 400
-        resultado = filtrar_dados_sql(nome_banco="gol", nome_tabela="voos", campo=campo, valor=valor)
+        
+        resultado = filtrar_dados_sql(nome_banco="gol", nome_tabela="voos", ano=ano, mes=mes)
         
         return jsonify({'resultado': resultado}), 200
     

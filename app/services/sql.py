@@ -8,7 +8,7 @@ def inserir_dados_sql(dados, nome_banco, nome_tabela):
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
-        "password":'biel0104',
+        "password":'',
         "database":'gol'
         }
         # Conectar ao banco de dados
@@ -34,20 +34,64 @@ def inserir_dados_sql(dados, nome_banco, nome_tabela):
         print(f"Erro ao inserir dados no SQLite: {erro}")
         raise erro
     
-def filtrar_dados_sql(nome_banco, nome_tabela, campo, valor):
+def filtrar_dados_sql_data(nome_banco, nome_tabela, ano, mes):
     try:
         # Conectar ao banco de dados
         db_config = {
         "host":'127.0.0.1',
         "user":'root',
-        "password":'biel0104',
+        "password":'',
         "database":'gol'
         }
         conexao = mysql.connector.connect(**db_config)
         cursor = conexao.cursor()
 
-        consulta_sql = f"SELECT * FROM {nome_tabela} WHERE {campo} = %s"
-        cursor.execute(consulta_sql, (valor,))
+        consulta_sql = f"""
+                        SELECT *
+                        FROM {nome_tabela}
+                        WHERE
+                            (ano = %s OR %s IS NULL)
+                            AND (mes = %s OR %s IS NULL);
+                    """
+        cursor.execute(consulta_sql,(ano, ano, mes, mes))
+
+        resultados = []
+        for row in cursor.fetchall():
+            row_dict = {}
+            for idx, col in enumerate(cursor.description):
+                col_name = col[0]
+                col_value = row[idx]
+                row_dict[col_name] = col_value
+            resultados.append(row_dict)
+
+        conexao.close()
+        
+        return resultados
+    
+    except sqlite3.Error as erro:
+        print(f"Erro ao filtrar dados no SQLite: {erro}")
+        raise erro
+    
+def filtrar_dados_sql_mercado(nome_banco, nome_tabela, ano, mes):
+    try:
+        # Conectar ao banco de dados
+        db_config = {
+        "host":'127.0.0.1',
+        "user":'root',
+        "password":'',
+        "database":'gol'
+        }
+        conexao = mysql.connector.connect(**db_config)
+        cursor = conexao.cursor()
+
+        consulta_sql = f"""
+                        SELECT *
+                        FROM {nome_tabela}
+                        WHERE
+                            (ano = %s OR %s IS NULL)
+                            AND (mes = %s OR %s IS NULL);
+                    """
+        cursor.execute(consulta_sql,(ano, ano, mes, mes))
 
         resultados = []
         for row in cursor.fetchall():
