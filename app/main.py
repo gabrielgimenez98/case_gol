@@ -10,10 +10,10 @@ r = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route("/")
 def index():
-	return 'Olá Mundo!!!'
+	return 'Health ok'
 
-@app.route('/cadastrar_usuario', methods=['POST'])
-def cadastrar_usuario():
+@app.route('/create_user', methods=['POST'])
+def create_user():
     try:
         data = request.get_json()
         username = data['username']
@@ -52,63 +52,63 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/inserir_dados', methods=['POST'])
-def inserir_dados():
+@app.route('/insert_data', methods=['POST'])
+def insert_data():
     try:
-        dados = extract_csv_data()
-        insert_into_sql(nome_banco="gol", nome_tabela="voos",dados=dados)
+        data = extract_csv_data()
+        insert_into_sql(data=data)
         
         return jsonify({'message': 'Dados Inseridos com sucesso'}), 201
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-@app.route('/filtrar_dados_data', methods=['POST'])
-def filtrar_dados_data():
+@app.route('/filter_data_by_date', methods=['POST'])
+def filter_data_by_date():
     try:
         data = request.get_json()
-        mes = data.get('mes')
-        ano = data.get('ano')
+        month = data.get('month')
+        year = data.get('year')
         
-        if not (mes or ano):
+        if not (month or year):
             return jsonify({'message': 'Envie mes ou ano para fazer filtro'}), 400
         
-        resultado = filter_by_date(nome_banco="gol", nome_tabela="voos", ano=ano, mes=mes)
+        results = filter_by_date(table_name="voos", year=year, month=month)
         
-        return jsonify({'resultado': resultado}), 200
+        return jsonify({'results': results}), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-@app.route('/filtrar_dados_mercado', methods=['POST'])
-def filtrar_dados_mercado():
+@app.route('/filter_data_by_market', methods=['POST'])
+def filter_data_by_market():
     try:
         data = request.get_json()
-        mercado = data.get('mercado')
+        market = data.get('market')
         
-        if not mercado:
+        if not market:
             return jsonify({'message': 'Envie mercado para fazer filtro'}), 400
         
-        resultado = filter_by_market(nome_banco="gol", nome_tabela="voos", mercado=mercado)
+        results = filter_by_market(table_name="voos", market=market)
         
-        return jsonify({'resultado': resultado}), 200
+        return jsonify({'results': results}), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
 
-@app.route('/grafico', methods=['POST'])
-def grafico():
+@app.route('/chart', methods=['POST'])
+def chart():
     try:
         data = request.get_json()
-        mercado = data.get('mercado')
-        mes_inicio = data.get('mes_inicio')
-        ano_inicio = data.get('ano_inicio')
-        mes_fim= data.get('mes_fim')
-        ano_fim= data.get('ano_fim')
-        x,y = filter_for_chart(nome_banco="gol", nome_tabela="voos",ano_inicio=ano_inicio, mes_inicio=mes_inicio,ano_fim=ano_fim, mes_fim=mes_fim, mercado=mercado)
-        grafico = create_chart(x, y)
-        return Response(grafico, content_type='image/png')
+        market = data.get('market')
+        initial_month = data.get('initial_month')
+        initial_year = data.get('initial_year')
+        end_month= data.get('end_month')
+        end_year= data.get('end_year')
+        x,y = filter_for_chart(table_name="voos",initial_year=initial_year, initial_month=initial_month,end_year=end_year, end_month=end_month, market=market)
+        chart_draw = create_chart(x, y)
+        return Response(chart_draw, content_type='image/png')
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
