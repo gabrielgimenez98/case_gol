@@ -31,30 +31,30 @@ def create_user():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/login', methods=['POST'])
-def login():
+def _login(username="", password=""):
     try:
-        data = request.get_json()
-        username = data['username']
-        password = data['password']
 
         # Verifique se o usuário existe no Redis
         stored_password = r.get(username)
 
         if stored_password is None:
-            return jsonify({'message': 'Usuário não encontrado'}), 404
+            raise Exception("Usuário não encontrado")
 
         if password == stored_password.decode('utf-8'):
-            return jsonify({'message': 'Login bem-sucedido'}), 200
+            return
         else:
-            return jsonify({'message': 'Senha incorreta'}), 401
+            raise Exception("Erro no login, Senha incorreta")
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        raise e
 
 @app.route('/insert_data', methods=['POST'])
 def insert_data():
     try:
+        data = request.get_json()
+        username = data.get('username',"")
+        password = data.get('password',"")
+        _login(username,password)
         data = extract_csv_data()
         insert_into_sql(data=data)
         
@@ -69,6 +69,9 @@ def filter_data_by_date():
         data = request.get_json()
         month = data.get('month')
         year = data.get('year')
+        username = data.get('username',"")
+        password = data.get('password',"")
+        _login(username,password)
         
         if not (month or year):
             return jsonify({'message': 'Envie mes ou ano para fazer filtro'}), 400
@@ -85,6 +88,9 @@ def filter_data_by_market():
     try:
         data = request.get_json()
         market = data.get('market')
+        username = data.get('username',"")
+        password = data.get('password',"")
+        _login(username,password)
         
         if not market:
             return jsonify({'message': 'Envie mercado para fazer filtro'}), 400
@@ -101,6 +107,9 @@ def filter_data_by_market():
 def chart():
     try:
         data = request.get_json()
+        username = data.get('username',"")
+        password = data.get('password',"")
+        _login(username,password)
         market = data.get('market')
         initial_month = data.get('initial_month')
         initial_year = data.get('initial_year')
